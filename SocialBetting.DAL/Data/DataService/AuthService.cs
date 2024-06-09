@@ -1,4 +1,7 @@
-﻿using SocialBetting.DAL.Services.IDataService;
+﻿using Microsoft.Win32;
+using SocialBetting.DAL.DTOs;
+using SocialBetting.DAL.Models;
+using SocialBetting.DAL.Services.IDataService;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,6 +16,49 @@ namespace SocialBetting.DAL.Services.DataService
         public AuthService(IGenericClass service) 
         {
             _service = service;
+        }
+        public async Task<SignUpDto> SignUp(SignUpModel model)
+        {
+            await _service.SaveData("sp_CreateUser", new
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.Email,
+                PhoneNumber = model.PhoneNumber,
+                HashPassword = model.Password,
+                IsActive = true,
+                IsEmailVerified = true,
+                RegistrationType = "InApp"
+            });
+            return new SignUpDto();
+        }
+        public async Task<bool> CheckEmailExsistence(string email)
+        {
+            var response = await _service.LoadData<SignUpDto, dynamic>("sp_CheckEmailExsistence",
+                new { email });
+
+            if (!response.Any())
+                return false;
+
+            return true;
+        }
+        public async Task<LoginModel?> GetDataforAuth(string email, string password)
+        {
+            var result = await _service.LoadData<LoginModel, dynamic>(
+                "sp_UserProfileLogin",
+                new { Email = email, Password = password });
+
+            return result.FirstOrDefault();
+        }
+        public async void UpdatePasswordOnEmail(string email, string password)
+        {
+            if (string.IsNullOrEmpty(email) && string.IsNullOrEmpty(password)) return;
+
+            await _service.LoadData<SignUpModelRequest, dynamic>(
+                "sp_UpdatePasswordForgetEmail",
+                new { Email = email, Password = password });
+
+            return;
         }
     }
 }
