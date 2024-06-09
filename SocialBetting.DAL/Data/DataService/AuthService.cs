@@ -1,7 +1,6 @@
 ﻿using SocialBetting.DAL.DTOs;
 using SocialBetting.DAL.Models;
 using SocialBetting.DAL.Services.IDataService;
-using SocialBetting.DAL.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
