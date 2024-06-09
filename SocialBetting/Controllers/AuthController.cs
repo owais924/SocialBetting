@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json.Linq;
 using SocialBetting.CommonHelper.Middleware.JwtService;
 using SocialBetting.DAL.DTOs;
 using SocialBetting.DAL.Models;
@@ -75,6 +76,49 @@ namespace SocialBetting.Controllers
             };
             return Ok(response);
         }
+        [HttpPost("GoogleSignIn")]
+        public async Task<IActionResult> GoogleSignIn(GoogleAuthModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.Email)) return BadRequest("Email Required");
+            var result = await _authService.GoogleSignInUser(model.Email, model.Name!, model.ProfilePictureUrl!, model.IsEmailVerified, model.GoogleId);
+            if (result == null) return Unauthorized(new { message = "Invalid Email" });
+
+            JWTToken tokens = new();
+            var token = tokens.GenerateToken(result.UserId.ToString(), result.Email!, _configuration);
+            GoogleAuthResponse response = new()
+            {
+                UserId = result.UserId,
+                FirstName = result.FirstName,
+                Email = result.Email,
+                Token = token,
+                ProfilePicture = result.ProfilePicture
+            };
+            return Ok(response);
+
+
+        }
+        [HttpPost("AppleSignIn")]
+        public async Task<IActionResult> AppleSignIn(AppleAuthModel model)
+        {
+            if (string.IsNullOrWhiteSpace(model.Email)) return BadRequest("Email Required");
+            var result = await _authService.AppleSignInUser(model.Email, model.Name!, model.ProfilePictureUrl!, model.IsEmailVerified, model.AppleId);
+            if (result == null) return Unauthorized(new { message = "Invalid Email" });
+
+            JWTToken tokens = new();
+            var token = tokens.GenerateToken(result.UserId.ToString(), result.Email!, _configuration);
+            AppleAuthResponse response = new()
+            {
+                UserId = result.UserId,
+                FirstName = result.FirstName,
+                Email = result.Email,
+                Token = token,
+                ProfilePicture = result.ProfilePicture
+            };
+            return Ok(response);
+
+
+        }
+
         [HttpGet("ResetPassword")]
         public async Task<IActionResult> ResetPassword(string email, string password, string confirmPassword)
         {

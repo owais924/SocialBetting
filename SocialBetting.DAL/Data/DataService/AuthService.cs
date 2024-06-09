@@ -60,5 +60,33 @@ namespace SocialBetting.DAL.Services.DataService
 
             return;
         }
+        public async Task<GoogleUserDto?> GoogleSignInUser(string email, string name, string profilePicture, bool isEmailVerified, string? googleId)
+        {
+            var result = await _service.LoadData<GoogleUserDto, dynamic>("sp_GoogleSignInUser", new
+            {
+                Email = email,
+                FirstName = name,
+                ProfilePicture = profilePicture,
+                IsEmailVerified = isEmailVerified,
+                IsActive = true,
+                RegistrationType = "External",
+                GoogleId = googleId
+            });
+            return result.FirstOrDefault();
+        }
+        public async Task<AppleUserDto?> AppleSignInUser(string email, string name, string profilePicture, bool isEmailVerified, string? appleId)
+        {
+            var result = await _service.LoadData<AppleUserDto, dynamic>("sp_AppleSignInUser", new
+            {
+                Email = email,
+                FirstName = name,
+                ProfilePicture = profilePicture,
+                IsEmailVerified = isEmailVerified,
+                IsActive = true,
+                RegistrationType = "External",
+                AppleId = appleId
+            });
+            return result.FirstOrDefault();
+        }
     }
 }

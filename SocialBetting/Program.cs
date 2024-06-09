@@ -6,6 +6,7 @@ using SocialBetting.CommonHelper.Middleware.GlobalException;
 using System.Text;
 using SocialBetting.DAL.Services.IDataService;
 using SocialBetting.DAL.Services.DataService;
+using SocialBetting.DAL.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
@@ -75,7 +76,15 @@ builder.Services.AddScoped<IGenericClass, GenericClass>();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAnyOrigin", builder =>
+    {
+        builder.AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
 
 var app = builder.Build();
 
@@ -90,7 +99,7 @@ app.UseHttpsRedirection();
 app.ConfigureExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseCors("AllowAnyOrigin");
 app.MapControllers();
 
 app.Run();
