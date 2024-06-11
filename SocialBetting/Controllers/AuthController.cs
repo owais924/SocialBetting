@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
 using SocialBetting.CommonHelper.Middleware.JwtService;
+using SocialBetting.DAL.Data.IDataService;
 using SocialBetting.DAL.DTOs;
 using SocialBetting.DAL.Models;
 using SocialBetting.DAL.Services.IDataService;
@@ -17,10 +18,12 @@ namespace SocialBetting.Controllers
     {
         private readonly IAuthService _authService;
         private readonly IConfiguration _configuration;
-        public AuthController(IAuthService authService, IConfiguration configuration) 
+        private readonly IOtpService _otp;
+        public AuthController(IAuthService authService, IConfiguration configuration, IOtpService otpService) 
         {
             _authService = authService;
             _configuration = configuration;
+            _otp = otpService;
         }
         [HttpPost("SignUp")]
         public async Task<IActionResult> Register([FromBody] SignUpModel model)
@@ -118,7 +121,13 @@ namespace SocialBetting.Controllers
 
 
         }
+        //[HttpGet("ForgetPassword")]
+        //public async Task<IActionResult> ForgetPassword(string email)
+        //{
+        //    if (string.IsNullOrWhiteSpace(email)) 
+        //        return BadRequest(new { message = "Email is Required" });
 
+        //}
         [HttpGet("ResetPassword")]
         public async Task<IActionResult> ResetPassword(string email, string password, string confirmPassword)
         {
