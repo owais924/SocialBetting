@@ -121,13 +121,7 @@ namespace SocialBetting.Controllers
 
 
         }
-        //[HttpGet("ForgetPassword")]
-        //public async Task<IActionResult> ForgetPassword(string email)
-        //{
-        //    if (string.IsNullOrWhiteSpace(email)) 
-        //        return BadRequest(new { message = "Email is Required" });
-
-        //}
+  
         [HttpGet("ResetPassword")]
         public async Task<IActionResult> ResetPassword(string email, string password, string confirmPassword)
         {
