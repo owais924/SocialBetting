@@ -88,5 +88,52 @@ namespace SocialBetting.DAL.Services.DataService
             });
             return result.FirstOrDefault();
         }
+        public async Task<string> ForgetPassword(string email)
+        {
+            SignUpModel model = new() { Email = email };
+            SignUpDto retData = await CheckRecordExistence(model);
+            if (retData.Email != null)
+            {
+                return "Record Exist";
+            }
+            return "Invalid Email";
+        }
+        private async Task<SignUpDto> CheckRecordExistence(SignUpModel model)
+        {
+            SignUpDto signUpDto = new();
+            if(string.IsNullOrEmpty(model.Email)) return signUpDto;
+            var retData = await _service.LoadData<SignUpModel, dynamic>("sp_CheckEmailExsistence", new {model.Email});
+            if(retData.Any())
+            {
+                return signUpDto;
+            }
+            return signUpDto;
+        }
+        public async Task<string> ConfirmMail(string email)
+        {
+            if (string.IsNullOrEmpty(email))
+                return "Email Is Required";
+            bool retData = await CheckEmailWithoutEmailVerifiedStatus(email);
+            if(retData)
+            {
+                await _service.LoadData<SignUpDto, dynamic>("", new {Email = email});
+                return "Mail Confirm";
+            }
+            return "Invalid Email";
+        }
+        public async Task<bool> CheckEmailWithoutEmailVerifiedStatus(string email)
+        {
+            var retData = await _service.LoadData<SignUpDto, dynamic>("", new {Email =email});
+            if(retData is not null || retData!.Any()) 
+            {
+                return true;
+            }
+            return false;
+        }
+        public async Task<string> UserEmailVerificationStatus(string email)
+        {
+            await _service.SaveData("", new {Email = email});
+            return "Email Verified!";
+        }
     }
 }

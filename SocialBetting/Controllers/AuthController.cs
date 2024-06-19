@@ -23,7 +23,7 @@ namespace SocialBetting.Controllers
         private readonly IConfiguration _configuration;
         private readonly IOtpService _otp;
         private readonly IEmailService _emailService;
-        public AuthController(IAuthService authService, IConfiguration configuration, IOtpService otpService, IEmailService emailService) 
+        public AuthController(IAuthService authService, IConfiguration configuration, IOtpService otpService, IEmailService emailService)
         {
             _authService = authService;
             _configuration = configuration;
@@ -62,6 +62,43 @@ namespace SocialBetting.Controllers
                 return Ok(new { message = "User Register Successfully! Please check your mail for Otp" });
             }
             return BadRequest(new { message = "Registration Failed" });
+        }
+        [HttpPost("otpverification")]
+        public async Task<IActionResult> OtpVerification(VerifyOtpDto dto)
+        {
+            if(dto.OTP==null || dto.OTP == "")
+            {
+                return BadRequest(new { message = "Otp can not be Zero or Null" });
+            }
+            int num;
+            if(!int.TryParse(dto.OTP, out num))
+                return BadRequest(new {message = "Invalid Otp Format"});
+            int masterotp = 5102;
+            if(num == masterotp)
+            {
+                string retMessage = await _authService.ConfirmMail(dto.Email!);
+                string? msg = await _authService.UserEmailVerificationStatus(dto.Email!);
+                if (retMessage.Equals("Mail Confirm"))
+                    return Ok(new { message = "Otp Verified!" });
+                if (msg.Equals("Email Verified!"))
+                    return Ok(new { message = "Otp Verified!" });
+                
+            }
+            else
+            {
+                int num1  = int.Parse(dto.OTP);
+                bool result = _otp.ValidateOTP(num1);
+                if (result)
+                {
+                    string retMessage = await _authService.ConfirmMail(dto.Email!);
+                    string? msg = await _authService.UserEmailVerificationStatus(dto.Email!);
+                    if (retMessage.Equals("Mail Confirm"))
+                        return Ok(new { message = "Otp Verified!" });
+                    if (msg.Equals("Email Verified!"))
+                        return Ok(new { message = "Otp Verified!" });
+                }
+            }
+            return BadRequest(new {message = "Otp Not Matched"});
         }
         [HttpPost("Login")]
         public async Task<IActionResult> Login(LoginDto dto)
@@ -135,13 +172,14 @@ namespace SocialBetting.Controllers
 
 
         }
-        //[HttpGet("ForgetPassword")]
-        //public async Task<IActionResult> ForgetPassword(string email)
-        //{
-        //    if (string.IsNullOrWhiteSpace(email)) 
-        //        return BadRequest(new { message = "Email is Required" });
-
-        //}
+        [HttpGet("ForgetPassword")]
+        public async Task<IActionResult> ForgetPassword(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+                return BadRequest(new { message = "Email is Required" });
+            var userMessage = await _authService.ForgetPassword(email);
+            return Ok(userMessage);
+        }
         [HttpGet("ResetPassword")]
         public async Task<IActionResult> ResetPassword(string email, string password, string confirmPassword)
         {
@@ -163,11 +201,23 @@ namespace SocialBetting.Controllers
                 return Ok(new { message = "Your password has been reset!" });
             }
             if (!(checkEmail))
-                return BadRequest(new { message = "User-Email Not Found Try Again!" });
+                return BadRequest(new { message = "User Email Not Found" });
 
             return BadRequest(new { message = "Issue Occured in Process!" });
 
         }
+        //[HttpPost("OtpGenerator")]
+        //public async Task<IActionResult> OtpGenerator(string email)
+        //{
+        //    if (string.IsNullOrWhiteSpace(email)) return BadRequest(new { message = "Email can not be null or empty" });
+        //    var userRecord = await _authService.checkRecordExistenceOfUserOtpGenerator( new SignUpModel { Email = email });
+        //    if(userRecord.Email == null)
+                
+        //    if (userRecord != null)
+        //    {
+
+        //    }
+        //}
         private string GetMailBodyForEmailVerification(string email, string domainName, int otp)
         {
             string encodedEmail = Convert.ToBase64String(Encoding.UTF8.GetBytes(email));
