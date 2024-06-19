@@ -9,18 +9,18 @@
   <ItemGroup>
     <Compile Remove="Middlware\**" />
     <Compile Remove="Services\**" />
+    <Compile Remove="Service\**" />
     <EmbeddedResource Remove="Middlware\**" />
     <EmbeddedResource Remove="Services\**" />
+    <EmbeddedResource Remove="Service\**" />
     <None Remove="Middlware\**" />
     <None Remove="Services\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Service\" />
+    <None Remove="Service\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.30" />
+    <PackageReference Include="NETCore.MailKit" Version="2.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 

@@ -7,6 +7,9 @@ using System.Text;
 using SocialBetting.DAL.Services.IDataService;
 using SocialBetting.DAL.Services.DataService;
 using SocialBetting.DAL.Models;
+using SocialBetting.CommonHelper.Middleware.IService;
+using SocialBetting.CommonHelper.Middleware.Service;
+using SocialBetting.CommonHelper.Middleware.Class;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Configuration
@@ -68,7 +71,9 @@ builder.Services.AddSwaggerGen(option =>
 
 });
 builder.Services.AddControllers();
+builder.Services.Configure<EmailConfiguration>(builder.Configuration.GetSection("EmailConfiguration"));
 #region
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IGenericClass, GenericClass>();
 #endregion

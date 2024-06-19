@@ -3,12 +3,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
+using SocialBetting.CommonHelper.Middleware.Class;
+using SocialBetting.CommonHelper.Middleware.IService;
 using SocialBetting.CommonHelper.Middleware.JwtService;
 using SocialBetting.DAL.Data.IDataService;
 using SocialBetting.DAL.DTOs;
 using SocialBetting.DAL.Models;
 using SocialBetting.DAL.Services.IDataService;
 using SocialBetting.DAL.ViewModel;
+using System.Text;
 
 namespace SocialBetting.Controllers
 {
@@ -19,11 +22,13 @@ namespace SocialBetting.Controllers
         private readonly IAuthService _authService;
         private readonly IConfiguration _configuration;
         private readonly IOtpService _otp;
-        public AuthController(IAuthService authService, IConfiguration configuration, IOtpService otpService) 
+        private readonly IEmailService _emailService;
+        public AuthController(IAuthService authService, IConfiguration configuration, IOtpService otpService, IEmailService emailService) 
         {
             _authService = authService;
             _configuration = configuration;
             _otp = otpService;
+            _emailService = emailService;
         }
         [HttpPost("SignUp")]
         public async Task<IActionResult> Register([FromBody] SignUpModel model)
@@ -36,18 +41,27 @@ namespace SocialBetting.Controllers
             {
                 return BadRequest(new { message = "Email Already Exist" });
             }
-            SignUpDto dto = new SignUpDto()
+            //SignUpDto dto = new SignUpDto()
+            //{
+            //    FirstName = model.FirstName,
+            //    LastName = model.LastName,
+            //    Email = model.Email,
+            //    PhoneNumber = model.PhoneNumber,
+            //    Password = model.Password,
+            //    IsActive = true,
+            //    IsEmailVerified=true
+            //};
+            var result = await _authService.SignUp(model);
+            if (result != null)
             {
-                FirstName = model.FirstName,
-                LastName = model.LastName,
-                Email = model.Email,
-                PhoneNumber = model.PhoneNumber,
-                Password = model.Password,
-                IsActive = true,
-                IsEmailVerified=true
-            };
-            await _authService.SignUp(model);
-            return Ok(new { message = "User Register Successfully" });
+                var otp = _otp.GenerateOTP();
+                var domainName = _configuration["DomainName"]!;
+                var emailContent = GetMailBodyForEmailVerification(model.Email!, domainName, otp);
+                var message = new Message(new List<string> { model.Email! }, "Welcome To SocialBetting IQ", emailContent);
+                _emailService.SendEmail(message);
+                return Ok(new { message = "User Register Successfully! Please check your mail for Otp" });
+            }
+            return BadRequest(new { message = "Registration Failed" });
         }
         [HttpPost("Login")]
         public async Task<IActionResult> Login(LoginDto dto)
@@ -153,6 +167,17 @@ namespace SocialBetting.Controllers
 
             return BadRequest(new { message = "Issue Occured in Process!" });
 
+        }
+        private string GetMailBodyForEmailVerification(string email, string domainName, int otp)
+        {
+            string encodedEmail = Convert.ToBase64String(Encoding.UTF8.GetBytes(email));
+            string url = $"{domainName}api/Auth/otpverification?otp={otp}&email={encodedEmail}";
+
+            return $@"
+        <div style='text-align:center;'>
+            <h1>Welcome To SocialBetting IQ</h1>
+            <h3>Your OTP is '{otp}'</h3> 
+        </div>";
         }
     }
 }
